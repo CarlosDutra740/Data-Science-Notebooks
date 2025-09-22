@@ -48,32 +48,7 @@ Aqui estão alguns dos notebooks mais relevantes:
 
 ---
 
-## 📈 Possíveis Evoluções
 
-- Adicionar **sumário interativo** ou índice com temas (por exemplo: “Visão Geral → Voz → Visualizações → Métodos Numéricos → Projetos”).  
-- Incluir **ambiente definido** (e.g. `environment.yml` ou `requirements.txt`) para replicação.  
-- Permitir execução online via _Binder_ e/ou _JupyterLite_.  
-- Criar uma versão “blog/documentação” usando Jupyter Book, MkDocs ou similares, para facilitar navegação e deixar mais profissional.  
-
----
-
-## ⚠️ Potenciais Riscos / O que precisa cuidar
-
-- Muitos notebooks “soltos” sem padronização dificultam leitura: divergência de estilo, dependências que não estão documentadas.  
-- Arquivos grandes ou saídas pesadas (muitas imagens, áudio) aumentam o tamanho do repositório e podem deixar clone lento.  
-- Dependências exóticas ou de GPU dificultam execução para quem só tem CPU/local sem setup.
-
----
-
-## 📌 Como contribuir ou usar pra mostrar seu trabalho
-
-Se você for compartilhar ou usar esse portfólio para entrevistas ou divulgação:
-
-- Destaque notebooks mais sólidos ou com maiores resultados.  
-- Documente o contexto: dataset, problema, resultados.  
-- Se possível, colocar comparativos, métricas, benchmarks.
-
----
 
 ## 🤝 Contato
 

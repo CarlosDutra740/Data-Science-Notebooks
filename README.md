@@ -35,8 +35,6 @@ Aqui estão alguns dos notebooks mais relevantes:
   2. Instalar dependências: crie um ambiente virtual com `venv` ou `conda` e instale os pacotes presentes no notebook ou um `requirements.txt` que você pode montar.  
   3. Abrir os notebooks via Jupyter Notebook / Jupyter Lab.
 
-- Explorar online (interativo):  
-  > *Sugestão:* posso adicionar botões para abrir no Binder ou usar JupyterLite para permitir que usuários rodem sem instalar nada.
 
 ---
 
@@ -53,7 +51,7 @@ Aqui estão alguns dos notebooks mais relevantes:
 ## 🤝 Contato
 
 Se quiser discutir algum modelo, colaborar, ou se você tiver sugestões, fique à vontade:  
-[Carlos Henrique Amorim Dutra](https://github.com/CarlosDutra740) — seu perfil no GitHub.
+[Carlos Henrique Amorim Dutra](https://github.com/CarlosDutra740) 
 
 ---
 

@@ -158,15 +158,9 @@ class ImageAnalyzerApp:
         params = ttk.Frame(frame)
         params.pack(side=tk.LEFT, padx=12)
 
-        ttk.Label(params, text="Anéis (radial):").grid(row=0, column=0, sticky=tk.E)
-        self.spin_rings = ttk.Spinbox(params, from_=1, to=20, width=4)
-        self.spin_rings.set(5)
-        self.spin_rings.grid(row=0, column=1, padx=4)
-
-        ttk.Label(params, text="Setores (angular):").grid(row=0, column=2, sticky=tk.E)
-        self.spin_sectors = ttk.Spinbox(params, from_=4, to=72, width=4)
-        self.spin_sectors.set(12)
-        self.spin_sectors.grid(row=0, column=3, padx=4)
+    # Note: radial rings and angular sectors controls were removed - sectors/radii
+    # are derived from ANGULOS_GRAUS and other physical parameters in the right
+    # panel. This keeps the top bar simpler.
 
         ttk.Label(params, text="Limiar cor:").grid(row=0, column=4, sticky=tk.E)
         self.entry_threshold = ttk.Entry(params, width=5)
@@ -247,20 +241,8 @@ class ImageAnalyzerApp:
         right = ttk.Frame(frame, width=360)
         right.pack(side=tk.RIGHT, fill=tk.Y)
 
-        # gráfico
-        self.fig_plot, self.ax_plot = plt.subplots(figsize=(4, 3))
-        try:
-            self.fig_plot.patch.set_facecolor('white')
-            self.ax_plot.set_facecolor('white')
-        except Exception:
-            pass
-        self.canvas_plot = FigureCanvasTkAgg(self.fig_plot, master=right)
-        self.canvas_plot.get_tk_widget().pack(fill=tk.X, padx=4, pady=4)
-
-        # log (Text) - force readable colors for log (black text on white bg)
-        ttk.Label(right, text="Log / Resultados: ").pack(anchor=tk.W, padx=6)
-        self.log_text = tk.Text(right, width=48, height=18, state=tk.DISABLED, fg='black', bg='white')
-        self.log_text.pack(fill=tk.BOTH, expand=True, padx=6, pady=2)
+        # (Plot and log will be created after the control panel so the menu appears at the top,
+        # plots in the middle and log at the bottom.)
 
         # índice de cores (legend) para referência do usuário - mostra nomes e cores usadas pelo programa
         ttk.Label(right, text="Índice de cores (programa):").pack(anchor=tk.W, padx=6, pady=(6,0))
@@ -307,37 +289,91 @@ class ImageAnalyzerApp:
         ttk.Radiobutton(rb_frame, text='Chão', variable=self.click_mode, value='chao').pack(side=tk.LEFT)
         ttk.Radiobutton(rb_frame, text='Topo', variable=self.click_mode, value='topo').pack(side=tk.LEFT)
 
+        # X center main slider and fine-adjust slider below it
         ttk.Label(control_categ, text='X Center').grid(row=1, column=0, sticky=tk.W)
         self.sld_xcenter = ttk.Scale(control_categ, from_=0, to=100, orient=tk.HORIZONTAL)
         self.sld_xcenter.grid(row=1, column=1, sticky=tk.EW, padx=4)
         self.sld_xcenter.configure(command=self._on_slider_moved)
+        # fine adjustment slider (adds/subtracts percent to main slider)
+        ttk.Label(control_categ, text='Ajuste fino').grid(row=2, column=0, sticky=tk.W)
+        self.sld_xcenter_fine = ttk.Scale(control_categ, from_=-5.0, to=5.0, orient=tk.HORIZONTAL)
+        self.sld_xcenter_fine.set(0.0)
+        self.sld_xcenter_fine.grid(row=2, column=1, sticky=tk.EW, padx=4, pady=(2,6))
+        self.sld_xcenter_fine.configure(command=self._on_slider_moved)
 
-        ttk.Label(control_categ, text='Y Chão').grid(row=2, column=0, sticky=tk.W)
+        # Y Chão main slider and fine-adjust slider
+        ttk.Label(control_categ, text='Y Chão').grid(row=3, column=0, sticky=tk.W)
         self.sld_ychao = ttk.Scale(control_categ, from_=0, to=100, orient=tk.HORIZONTAL)
-        self.sld_ychao.grid(row=2, column=1, sticky=tk.EW, padx=4)
+        self.sld_ychao.grid(row=3, column=1, sticky=tk.EW, padx=4)
         self.sld_ychao.configure(command=self._on_slider_moved)
+        ttk.Label(control_categ, text='Ajuste fino').grid(row=4, column=0, sticky=tk.W)
+        self.sld_ychao_fine = ttk.Scale(control_categ, from_=-5.0, to=5.0, orient=tk.HORIZONTAL)
+        self.sld_ychao_fine.set(0.0)
+        self.sld_ychao_fine.grid(row=4, column=1, sticky=tk.EW, padx=4, pady=(2,6))
+        self.sld_ychao_fine.configure(command=self._on_slider_moved)
 
-        ttk.Label(control_categ, text='Y Topo').grid(row=3, column=0, sticky=tk.W)
+        # Y Topo main slider and fine-adjust slider
+        ttk.Label(control_categ, text='Y Topo').grid(row=5, column=0, sticky=tk.W)
         self.sld_ytopo = ttk.Scale(control_categ, from_=0, to=100, orient=tk.HORIZONTAL)
-        self.sld_ytopo.grid(row=3, column=1, sticky=tk.EW, padx=4)
+        self.sld_ytopo.grid(row=5, column=1, sticky=tk.EW, padx=4)
         self.sld_ytopo.configure(command=self._on_slider_moved)
+        ttk.Label(control_categ, text='Ajuste fino').grid(row=6, column=0, sticky=tk.W)
+        self.sld_ytopo_fine = ttk.Scale(control_categ, from_=-5.0, to=5.0, orient=tk.HORIZONTAL)
+        self.sld_ytopo_fine.set(0.0)
+        self.sld_ytopo_fine.grid(row=6, column=1, sticky=tk.EW, padx=4, pady=(2,6))
+        self.sld_ytopo_fine.configure(command=self._on_slider_moved)
 
-        ttk.Label(control_categ, text='Altura câmara (m)').grid(row=4, column=0, sticky=tk.W)
+        # move camera/tunnel entries down so they don't overlap with fine sliders
+        ttk.Label(control_categ, text='Altura câmara (m)').grid(row=7, column=0, sticky=tk.W)
         self.entry_hcamera = ttk.Entry(control_categ, width=8)
         self.entry_hcamera.insert(0, '1.5')
-        self.entry_hcamera.grid(row=4, column=1, sticky=tk.W)
+        self.entry_hcamera.grid(row=7, column=1, sticky=tk.W)
+        # update preview when user confirms a numeric value
+        try:
+            self.entry_hcamera.bind('<Return>', self._on_entry_return)
+        except Exception:
+            pass
 
-        ttk.Label(control_categ, text='Altura túnel (m)').grid(row=5, column=0, sticky=tk.W)
+        ttk.Label(control_categ, text='Altura túnel (m)').grid(row=8, column=0, sticky=tk.W)
         self.entry_htunel = ttk.Entry(control_categ, width=8)
         self.entry_htunel.insert(0, '7.0')
-        self.entry_htunel.grid(row=5, column=1, sticky=tk.W)
+        self.entry_htunel.grid(row=8, column=1, sticky=tk.W)
+        try:
+            self.entry_htunel.bind('<Return>', self._on_entry_return)
+        except Exception:
+            pass
 
-        ttk.Label(control_categ, text='Num setores').grid(row=6, column=0, sticky=tk.W)
-        self.spin_sectors_local = ttk.Spinbox(control_categ, from_=4, to=72, width=6)
-        self.spin_sectors_local.set(12)
-        self.spin_sectors_local.grid(row=6, column=1, sticky=tk.W)
+        # Instead of allowing the user to change number of sectors here, expose
+        # the tunnel distance so the radii (based on ANGULOS_GRAUS) can be
+        # computed interactively. Number of angular sectors remains a fixed
+        # internal default (12) to avoid exposing the angular division in this
+        # control set.
+        ttk.Label(control_categ, text='Distância túnel (m)').grid(row=9, column=0, sticky=tk.W)
+        self.entry_dist_tunel = ttk.Entry(control_categ, width=8)
+        self.entry_dist_tunel.insert(0, str(int(DEFAULT_DIST_TUNEL)))
+        self.entry_dist_tunel.grid(row=9, column=1, sticky=tk.W)
+        try:
+            self.entry_dist_tunel.bind('<Return>', self._on_entry_return)
+        except Exception:
+            pass
 
-        ttk.Button(control_categ, text='Extrapolar e Analisar', command=self.extrapolate_and_analyze).grid(row=7, column=0, columnspan=2, pady=6)
+        ttk.Button(control_categ, text='Extrapolar e Analisar', command=self.extrapolate_and_analyze).grid(row=10, column=0, columnspan=2, pady=6)
+
+        # --- after control panel, create plot and log so controls are on top ---
+        # gráfico
+        self.fig_plot, self.ax_plot = plt.subplots(figsize=(4, 3))
+        try:
+            self.fig_plot.patch.set_facecolor('white')
+            self.ax_plot.set_facecolor('white')
+        except Exception:
+            pass
+        self.canvas_plot = FigureCanvasTkAgg(self.fig_plot, master=right)
+        self.canvas_plot.get_tk_widget().pack(fill=tk.X, padx=4, pady=4)
+
+        # log (Text) - force readable colors for log (black text on white bg)
+        ttk.Label(right, text="Log / Resultados: ").pack(anchor=tk.W, padx=6)
+        self.log_text = tk.Text(right, width=48, height=18, state=tk.DISABLED, fg='black', bg='white')
+        self.log_text.pack(fill=tk.BOTH, expand=True, padx=6, pady=2)
 
     def _build_status(self):
         frame = ttk.Frame(self.master)
@@ -380,20 +416,16 @@ class ImageAnalyzerApp:
         try:
             self.btn_drop_raw.configure(state=state)
             self.btn_import_categorized.configure(state=state)
-            # top controls
-            # iterate children of top frame? simpler: disable spinboxes and buttons we know
+            # top controls - check existence before changing state
             try:
-                self.spin_rings.configure(state=state)
-                self.spin_sectors.configure(state=state)
-                self.entry_threshold.configure(state=state)
-            except Exception:
-                pass
-            # extrapolate button
-            try:
-                # control_categ Extrapolar button is a child; find by name by storing earlier would be ideal
-                # fallback: disable via attribute if present
-                if hasattr(self, 'spin_sectors_local'):
-                    self.spin_sectors_local.configure(state=state)
+                if hasattr(self, 'entry_threshold'):
+                    self.entry_threshold.configure(state=state)
+                if hasattr(self, 'entry_dist_tunel'):
+                    self.entry_dist_tunel.configure(state=state)
+                if hasattr(self, 'entry_hcamera'):
+                    self.entry_hcamera.configure(state=state)
+                if hasattr(self, 'entry_htunel'):
+                    self.entry_htunel.configure(state=state)
             except Exception:
                 pass
         except Exception:
@@ -521,9 +553,16 @@ class ImageAnalyzerApp:
         # read UI params synchronously (small cost)
         h, w = self.categorized_loaded.shape[:2]
         try:
-            x_center_norm = float(self.sld_xcenter.get()) / 100.0
-            y_chao_norm = float(self.sld_ychao.get()) / 100.0
-            y_topo_norm = float(self.sld_ytopo.get()) / 100.0
+            # combine main slider with fine offset slider (fine is in percent)
+            x_main = float(self.sld_xcenter.get())
+            x_fine = float(getattr(self, 'sld_xcenter_fine', tk.DoubleVar()).get()) if hasattr(self, 'sld_xcenter_fine') else 0.0
+            ych_main = float(self.sld_ychao.get())
+            ych_fine = float(getattr(self, 'sld_ychao_fine', tk.DoubleVar()).get()) if hasattr(self, 'sld_ychao_fine') else 0.0
+            ytop_main = float(self.sld_ytopo.get())
+            ytop_fine = float(getattr(self, 'sld_ytopo_fine', tk.DoubleVar()).get()) if hasattr(self, 'sld_ytopo_fine') else 0.0
+            x_center_norm = max(0.0, min(100.0, x_main + x_fine)) / 100.0
+            y_chao_norm = max(0.0, min(100.0, ych_main + ych_fine)) / 100.0
+            y_topo_norm = max(0.0, min(100.0, ytop_main + ytop_fine)) / 100.0
             x_center = int(x_center_norm * w)
             y_chao = int(y_chao_norm * h)
             y_topo = int(y_topo_norm * h)
@@ -540,10 +579,12 @@ class ImageAnalyzerApp:
             h_tunel = float(self.entry_htunel.get())
         except Exception:
             h_tunel = 7.0
+        # number of angular sectors kept as a constant default (12)
+        num_setores = 12
         try:
-            num_setores = int(self.spin_sectors_local.get())
+            dist_tunel = float(self.entry_dist_tunel.get())
         except Exception:
-            num_setores = 12
+            dist_tunel = DEFAULT_DIST_TUNEL
 
         try:
             match_thr = float(self.entry_threshold.get())
@@ -554,15 +595,15 @@ class ImageAnalyzerApp:
         self._set_ui_enabled(False)
         self._set_status('Executando extrapolação e contagem (em background)...', 5)
 
-        # start background thread
-        t = threading.Thread(target=self._run_extrapolate_and_analyze, args=(x_center, y_chao, y_topo, h_camera, h_tunel, num_setores, match_thr), daemon=True)
+        # start background thread; pass dist_tunel so radii use the user value
+        t = threading.Thread(target=self._run_extrapolate_and_analyze, args=(x_center, y_chao, y_topo, h_camera, h_tunel, dist_tunel, num_setores, match_thr), daemon=True)
         t.start()
 
-    def _run_extrapolate_and_analyze(self, x_center, y_chao, y_topo, h_camera, h_tunel, num_setores, match_thr):
+    def _run_extrapolate_and_analyze(self, x_center, y_chao, y_topo, h_camera, h_tunel, dist_tunel, num_setores, match_thr):
         """Worker that performs the heavy extrapolation and counting. Posts results back to main thread."""
         try:
-            # compute radii using shared ANGULOS_GRAUS
-            lista_raios_pixels, raio_max_pixel, lista_angulos = self._compute_radii_pixels(y_chao, y_topo, h_camera, h_tunel)
+            # compute radii using shared ANGULOS_GRAUS and user-provided tunnel distance
+            lista_raios_pixels, raio_max_pixel, lista_angulos = self._compute_radii_pixels(y_chao, y_topo, h_camera, h_tunel, dist_tunel)
 
             # extrapolate
             img_extrap = extrapolar_imagem_radial(self.categorized_loaded, (x_center, int(y_chao)), raio_max_pixel)
@@ -679,8 +720,6 @@ class ImageAnalyzerApp:
             return
 
         try:
-            rings = int(self.spin_rings.get())
-            sectors = int(self.spin_sectors.get())
             thr = float(self.entry_threshold.get())
         except Exception as e:
             messagebox.showerror("Erro", f"Parâmetros inválidos: {e}")
@@ -689,8 +728,11 @@ class ImageAnalyzerApp:
         global COLOR_DISTANCE_THRESHOLD
         COLOR_DISTANCE_THRESHOLD = thr
 
+        # default sector count used for this analysis path
+        sectors = 12
+
         self._set_status("Processando...", 5)
-        self._log(f"Iniciando análise: rings={rings}, sectors={sectors}, threshold={thr}")
+        self._log(f"Iniciando análise: sectors={sectors}, threshold={thr}")
         # passo 1: classificar imagem (gera label_map, mapping e rgb colorizada)
         self._set_status("Classificando pixels (visual)...", 10)
         try:
@@ -718,9 +760,15 @@ class ImageAnalyzerApp:
         try:
             # usa sliders da segunda etapa, se existirem, senão usa defaults
             if hasattr(self, 'sld_xcenter'):
-                x_center = int((float(self.sld_xcenter.get()) / 100.0) * w)
-                y_chao = int((float(self.sld_ychao.get()) / 100.0) * h)
-                y_topo = int((float(self.sld_ytopo.get()) / 100.0) * h)
+                x_main = float(self.sld_xcenter.get())
+                x_fine = float(getattr(self, 'sld_xcenter_fine', tk.DoubleVar()).get()) if hasattr(self, 'sld_xcenter_fine') else 0.0
+                ych_main = float(self.sld_ychao.get())
+                ych_fine = float(getattr(self, 'sld_ychao_fine', tk.DoubleVar()).get()) if hasattr(self, 'sld_ychao_fine') else 0.0
+                ytop_main = float(self.sld_ytopo.get())
+                ytop_fine = float(getattr(self, 'sld_ytopo_fine', tk.DoubleVar()).get()) if hasattr(self, 'sld_ytopo_fine') else 0.0
+                x_center = int((max(0.0, min(100.0, x_main + x_fine)) / 100.0) * w)
+                y_chao = int((max(0.0, min(100.0, ych_main + ych_fine)) / 100.0) * h)
+                y_topo = int((max(0.0, min(100.0, ytop_main + ytop_fine)) / 100.0) * h)
             else:
                 x_center = w // 2
                 y_chao = int(h * 0.9)
@@ -728,19 +776,16 @@ class ImageAnalyzerApp:
             # alturas: pegar de entries se existirem, caso contrário usar default
             h_camera = float(self.entry_hcamera.get()) if hasattr(self, 'entry_hcamera') else 1.5
             h_tunel = float(self.entry_htunel.get()) if hasattr(self, 'entry_htunel') else 7.0
-            dist_tunel = 90.0
+            try:
+                dist_tunel = float(self.entry_dist_tunel.get()) if hasattr(self, 'entry_dist_tunel') else DEFAULT_DIST_TUNEL
+            except Exception:
+                dist_tunel = DEFAULT_DIST_TUNEL
         except Exception as e:
             messagebox.showerror("Erro", f"Parâmetros de setor inválidos: {e}")
             return
 
-        # ângulos fixos (graus) e raios reais em metros
-        angulos_graus = [2.0, 3.0, 4.0, 5.8, 8.0, 11.6, 16.6, 24.0, 36.0, 56.8]
-        lista_angulos = np.radians(angulos_graus)
-        lista_raios_m = [dist_tunel * np.tan(theta) for theta in lista_angulos]
-
-        # converte metros -> pixels pela escala vertical entre chao e topo
-        pixels_por_metro = metros_para_pixels(y_chao, y_topo, h_camera, h_tunel)
-        lista_raios_pixels = [max(1, int(r * pixels_por_metro)) for r in lista_raios_m]
+        # compute radii from shared ANGULOS_GRAUS and chosen tunnel distance
+        lista_raios_pixels, _, _ = self._compute_radii_pixels(y_chao, y_topo, h_camera, h_tunel, dist_tunel)
 
         # centro y baseado na altura da câmera
         y_center = int(y_chao - (h_camera / h_tunel) * abs(y_topo - y_chao))
@@ -910,6 +955,24 @@ class ImageAnalyzerApp:
         """Called when any slider moves - update preview overlay in real time."""
         self._draw_preview_overlay()
 
+    def _on_entry_return(self, event=None):
+        """Called when the user presses Enter in numeric entries - refresh preview."""
+        try:
+            # small delay is unnecessary; redraw directly
+            self._draw_preview_overlay()
+        except Exception:
+            pass
+
+    def _on_fine_entry_return(self, event=None):
+        """Handler for fine numeric entries beside sliders. Syncs entry -> slider and redraws preview."""
+        # numeric-entry based fine adjustments removed in favor of fine sliders
+        return
+
+    def _sync_sliders_to_entries(self):
+        """Copy current slider values into numeric entries for fine adjustments."""
+        # fine numeric entries removed; nothing to sync
+        return
+
     def _on_canvas_click(self, event):
         """Handle clicks on the image canvas to set center/chao/topo depending on click_mode."""
         if event.inaxes is None:
@@ -943,6 +1006,20 @@ class ImageAnalyzerApp:
             val = int((y / img_h) * 100)
             self.sld_ytopo.set(val)
 
+        # reset fine adjustments when user explicitly sets positions by click
+        try:
+            self.sld_xcenter_fine.set(0.0)
+        except Exception:
+            pass
+        try:
+            self.sld_ychao_fine.set(0.0)
+        except Exception:
+            pass
+        try:
+            self.sld_ytopo_fine.set(0.0)
+        except Exception:
+            pass
+
         self._draw_preview_overlay()
 
     def _draw_preview_overlay(self):
@@ -961,9 +1038,15 @@ class ImageAnalyzerApp:
 
         h, w = disp.shape[:2]
         try:
-            x_center = int((float(self.sld_xcenter.get()) / 100.0) * w)
-            y_chao = int((float(self.sld_ychao.get()) / 100.0) * h)
-            y_topo = int((float(self.sld_ytopo.get()) / 100.0) * h)
+            x_main = float(self.sld_xcenter.get())
+            x_fine = float(getattr(self, 'sld_xcenter_fine', tk.DoubleVar()).get()) if hasattr(self, 'sld_xcenter_fine') else 0.0
+            ych_main = float(self.sld_ychao.get())
+            ych_fine = float(getattr(self, 'sld_ychao_fine', tk.DoubleVar()).get()) if hasattr(self, 'sld_ychao_fine') else 0.0
+            ytop_main = float(self.sld_ytopo.get())
+            ytop_fine = float(getattr(self, 'sld_ytopo_fine', tk.DoubleVar()).get()) if hasattr(self, 'sld_ytopo_fine') else 0.0
+            x_center = int((max(0.0, min(100.0, x_main + x_fine)) / 100.0) * w)
+            y_chao = int((max(0.0, min(100.0, ych_main + ych_fine)) / 100.0) * h)
+            y_topo = int((max(0.0, min(100.0, ytop_main + ytop_fine)) / 100.0) * h)
         except Exception:
             return
 
@@ -976,27 +1059,51 @@ class ImageAnalyzerApp:
         try:
             if self.show_overlay.get():
                 # desenhar círculos concêntricos e linhas angulares com a cor selecionada
-                # usar uma aproximação de 5 raios para preview
+                # compute radii from ANGULOS_GRAUS and current tunnel distance
                 h, w = disp.shape[:2]
-                cx = int((float(self.sld_xcenter.get()) / 100.0) * w)
+                cx = int((max(0.0, min(100.0, float(self.sld_xcenter.get()) + (float(getattr(self, 'sld_xcenter_fine', tk.DoubleVar()).get()) if hasattr(self, 'sld_xcenter_fine') else 0.0))) / 100.0) * w)
                 cy = int((y_chao + y_topo) / 2)
-                preview_radii = [int((i + 1) * min(w, h) / 10) for i in range(5)]
                 try:
-                    cv2.circle(disp, (cx, cy), preview_radii[0], tuple(self.sector_color_bgr), int(self.sector_thickness))
+                    h_camera = float(self.entry_hcamera.get()) if hasattr(self, 'entry_hcamera') else 1.5
                 except Exception:
-                    pass
-                for r in preview_radii:
-                    cv2.circle(disp, (cx, cy), int(r), tuple(self.sector_color_bgr), int(self.sector_thickness))
-                for j in range(12):
-                    ang = 2 * np.pi * j / 12
-                    x_end = int(cx + preview_radii[-1] * np.cos(ang))
-                    y_end = int(cy + preview_radii[-1] * np.sin(ang))
-                    cv2.line(disp, (cx, cy), (x_end, y_end), tuple(self.sector_color_bgr), int(self.sector_thickness))
+                    h_camera = 1.5
+                try:
+                    h_tunel = float(self.entry_htunel.get()) if hasattr(self, 'entry_htunel') else 7.0
+                except Exception:
+                    h_tunel = 7.0
+                try:
+                    dist_tunel = float(self.entry_dist_tunel.get()) if hasattr(self, 'entry_dist_tunel') else DEFAULT_DIST_TUNEL
+                except Exception:
+                    dist_tunel = DEFAULT_DIST_TUNEL
+
+                try:
+                    lista_raios_pixels, _, _ = self._compute_radii_pixels(y_chao, y_topo, h_camera, h_tunel, dist_tunel)
+                except Exception:
+                    # fallback to a few example radii if compute fails
+                    lista_raios_pixels = [int((i + 1) * min(w, h) / 10) for i in range(5)]
+
+                # draw concentric arcs (full circles here) and angular dividing lines
+                for r in lista_raios_pixels:
+                    try:
+                        cv2.circle(disp, (cx, cy), int(r), tuple(self.sector_color_bgr), int(self.sector_thickness))
+                    except Exception:
+                        pass
+                # draw angular lines for default sector count (12)
+                sectors_preview = 12
+                max_r = lista_raios_pixels[-1] if len(lista_raios_pixels) > 0 else int(min(w, h) / 4)
+                for j in range(sectors_preview):
+                    ang = 2 * np.pi * j / sectors_preview
+                    x_end = int(cx + max_r * np.cos(ang))
+                    y_end = int(cy + max_r * np.sin(ang))
+                    try:
+                        cv2.line(disp, (cx, cy), (x_end, y_end), tuple(self.sector_color_bgr), int(self.sector_thickness))
+                    except Exception:
+                        pass
                 if self.show_labels.get():
                     # desenhar alguns rótulos de exemplo
                     for idx, ang in enumerate([0, 2 * np.pi / 3, 4 * np.pi / 3]):
-                        x_t = int(cx + preview_radii[-1] * 0.6 * np.cos(ang))
-                        y_t = int(cy + preview_radii[-1] * 0.6 * np.sin(ang))
+                        x_t = int(cx + max_r * 0.6 * np.cos(ang))
+                        y_t = int(cy + max_r * 0.6 * np.sin(ang))
                         cv2.putText(disp, f"{idx+1}", (x_t - 6, y_t + 6), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255,255,255), thickness=1, lineType=cv2.LINE_AA)
                         cv2.putText(disp, f"{idx+1}", (x_t - 6, y_t + 6), cv2.FONT_HERSHEY_SIMPLEX, 0.6, tuple(self.sector_color_bgr), thickness=1, lineType=cv2.LINE_AA)
         except Exception:
